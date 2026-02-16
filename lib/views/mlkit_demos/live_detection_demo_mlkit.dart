@@ -35,12 +35,10 @@ class _LivenessDetectionDemoMLKitState extends State<LivenessDetectionDemoMLKit>
   // State variables
   String _statusMessage = 'Initializing camera...';
   LivenessStateType _currentStateType = LivenessStateType.initialized;
-  String? _currentChallengeInstruction;
   int _completedChallenges = 0;
   int _totalChallenges = 0;
   bool _isCompleted = false;
   bool _hasError = false;
-  String? _errorMessage;
   ChallengeType? _previousChallengeType;
 
   // Anti-spoofing results
@@ -148,7 +146,6 @@ class _LivenessDetectionDemoMLKitState extends State<LivenessDetectionDemoMLKit>
       _currentStateType = state.type;
       _statusMessage = _getStatusMessage(state);
       _hasError = state.type == LivenessStateType.error;
-      _errorMessage = state.error?.message;
 
       _updateFaceQualityMetrics(state);
 
@@ -188,8 +185,7 @@ class _LivenessDetectionDemoMLKitState extends State<LivenessDetectionDemoMLKit>
   }
 
   void _handleChallengeInProgress(LivenessState state) {
-    _currentChallengeInstruction = state.currentChallenge?.instruction;
-    _totalChallenges = state.totalChallenges ?? 0;
+    _totalChallenges = state.totalChallenges;
 
     if (_previousChallengeType != null &&
         state.currentChallenge != null &&
@@ -371,7 +367,6 @@ class _LivenessDetectionDemoMLKitState extends State<LivenessDetectionDemoMLKit>
 
   void _handleError(String message) {
     _hasError = true;
-    _errorMessage = message;
     _triggerHaptic(HapticType.error);
     _recordSession(false);
     widget.onError?.call(message);
@@ -497,7 +492,6 @@ class _LivenessDetectionDemoMLKitState extends State<LivenessDetectionDemoMLKit>
     setState(() {
       _isCompleted = false;
       _hasError = false;
-      _errorMessage = null;
       _completedChallenges = 0;
       _previousChallengeType = null;
       _statusMessage = 'Restarting...';

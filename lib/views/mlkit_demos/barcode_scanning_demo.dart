@@ -245,9 +245,7 @@ class BarcodePainter extends CustomPainter {
       ..color = Colors.green;
 
     for (final barcode in barcodes) {
-      if (barcode.boundingBox != null) {
-        canvas.drawRect(barcode.boundingBox!, paint);
-      }
+      canvas.drawRect(barcode.boundingBox, paint);
     }
   }
 

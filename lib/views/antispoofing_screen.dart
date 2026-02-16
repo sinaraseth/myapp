@@ -31,7 +31,6 @@ class _AntispoofingScreenState extends State<AntispoofingScreen> {
   AntispoofingResult? _result;
   String _statusMessage = "";
   List<AntispoofingResult> _capturedResults = [];
-  String? _videoPath;
 
   // Video upload summary results
   int _totalVideosProcessed = 0;
@@ -120,7 +119,6 @@ class _AntispoofingScreenState extends State<AntispoofingScreen> {
       _result = null;
       _statusMessage = "";
       _capturedResults.clear();
-      _videoPath = null;
     });
   }
 
@@ -170,7 +168,6 @@ class _AntispoofingScreenState extends State<AntispoofingScreen> {
     try {
       // Stop video recording
       final videoFile = await _cameraController!.stopVideoRecording();
-      _videoPath = videoFile.path;
 
       setState(() {
         _statusMessage = "Extracting frames from video...";
