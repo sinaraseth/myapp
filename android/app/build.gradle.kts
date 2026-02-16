@@ -32,10 +32,17 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Signing with the debug keys for now
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
+
     }
     packagingOptions {
         pickFirst("lib/arm64-v8a/libonnxruntime.so")
@@ -50,4 +57,5 @@ flutter {
 }
 dependencies {
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.18.0")
+    implementation("com.google.mlkit:face-detection:16.1.7")
 }
