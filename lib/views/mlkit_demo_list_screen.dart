@@ -5,6 +5,7 @@ import 'mlkit_demos/text_recognition_demo.dart';
 import 'mlkit_demos/face_mesh_demo.dart';
 import 'mlkit_demos/barcode_scanning_demo.dart';
 import 'mlkit_demos/image_labeling_demo.dart';
+import 'mlkit_demos/gaze_detection_demo.dart';
 // import 'mlkit_demos/object_detection_demo.dart';
 
 class MLKitDemoListScreen extends StatelessWidget {
@@ -26,6 +27,13 @@ class MLKitDemoListScreen extends StatelessWidget {
         'icon': Icons.face_retouching_natural,
         'color': Colors.deepPurple,
         'screen': const LivenessDetectionDemoMLKit(),
+      },
+      {
+        'title': 'Gaze Direction Detection',
+        'description': 'Track eye gaze direction & calibration',
+        'icon': Icons.remove_red_eye,
+        'color': Colors.indigo,
+        'screen': const GazeDetectionDemo(),
       },
       {
         'title': 'Text Recognition',

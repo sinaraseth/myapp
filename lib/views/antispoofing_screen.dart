@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as video_thumbnail;
 import '../controllers/antispoofing_controller.dart';
 import '../models/antispoofing_result.dart';
+import 'hybrid_verification_screen.dart';
 
 class AntispoofingScreen extends StatefulWidget {
   const AntispoofingScreen({super.key});
@@ -455,11 +456,12 @@ class _AntispoofingScreenState extends State<AntispoofingScreen> {
         throw Exception('Video duration is invalid');
       }
 
-      // Calculate two positions (1/3, 2/3) in milliseconds
-      final firstPositionMs = duration.inMilliseconds ~/ 3;
-      final secondPositionMs = (duration.inMilliseconds * 2) ~/ 3;
+      // Calculate three positions (at 1/4, 1/2, and 3/4 of duration) in milliseconds
+      final position1Ms = duration.inMilliseconds ~/ 4;
+      final position2Ms = duration.inMilliseconds ~/ 2;
+      final position3Ms = (duration.inMilliseconds * 3) ~/ 4;
       print(
-        '   📸 Extracting 2 frames at ${(firstPositionMs / 1000).toStringAsFixed(1)}s and ${(secondPositionMs / 1000).toStringAsFixed(1)}s...',
+        '   📸 Extracting 3 frames at ${(position1Ms / 1000).toStringAsFixed(1)}s, ${(position2Ms / 1000).toStringAsFixed(1)}s, and ${(position3Ms / 1000).toStringAsFixed(1)}s...',
       );
 
       // Create temporary directory for extracted frames
@@ -486,13 +488,13 @@ class _AntispoofingScreenState extends State<AntispoofingScreen> {
         return frameFile;
       }
 
-      final frame1 = await extractFrameAt(firstPositionMs);
+      final frame1 = await extractFrameAt(position1Ms);
       extractedFrames.add(frame1);
-      print('   ✅ Frame 1 extracted successfully');
-
-      final frame2 = await extractFrameAt(secondPositionMs);
+      final frame2 = await extractFrameAt(position2Ms);
       extractedFrames.add(frame2);
-      print('   ✅ Frame 2 extracted successfully');
+      final frame3 = await extractFrameAt(position3Ms);
+      extractedFrames.add(frame3);
+      print('   ✅ 3 frames extracted successfully');
 
       // Process all frames with antispoofing service
       final results = <AntispoofingResult>[];
@@ -666,22 +668,47 @@ class _AntispoofingScreenState extends State<AntispoofingScreen> {
       padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
-          // Upload Videos button
+          // Upload Videos & Hybrid buttons
           if (!_isStreaming && !_isLoading)
-            ElevatedButton.icon(
-              onPressed: _pickAndProcessVideos,
-              icon: const Icon(Icons.upload_file),
-              label: const Text(
-                'Upload Videos',
-                style: TextStyle(fontSize: 18),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 20,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _pickAndProcessVideos,
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text(
+                    'Upload Videos',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HybridVerificationScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.verified_user),
+                  label: const Text('Hybrid', style: TextStyle(fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                  ),
+                ),
+              ],
             ),
           const SizedBox(height: 16),
           // Webcam controls
