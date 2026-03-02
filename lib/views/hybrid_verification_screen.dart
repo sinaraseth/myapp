@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import '../controllers/gaze_detection_controller.dart';
+import '../services/gaze_detection_service.dart';
 import '../controllers/antispoofing_controller.dart';
 import '../models/gaze_result.dart';
 import '../models/antispoofing_result.dart';
@@ -19,6 +20,7 @@ class HybridVerificationScreen extends StatefulWidget {
 class _HybridVerificationScreenState extends State<HybridVerificationScreen>
     with SingleTickerProviderStateMixin {
   // Controllers
+  final GazeDetectionService _gazeService = GazeDetectionService();
   final GazeDetectionController _gazeController = GazeDetectionController();
   final AntispoofingController _antispoofingController =
       AntispoofingController();
@@ -44,7 +46,6 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
   ];
   int _currentTargetIdx = 0;
   bool _isLookingAtTarget = false;
-  Timer? _detectionTimer;
   bool _isProcessingGaze = false;
   bool _gazeCalibrationPassed = false;
 
@@ -89,7 +90,7 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
     try {
       // Load both models
       await Future.wait([
-        _gazeController.loadModel(),
+        _gazeService.loadModel(),
         _antispoofingController.loadModel(),
       ]);
       _cameras = await availableCameras();
@@ -106,10 +107,11 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
 
   @override
   void dispose() {
+    _isVerifying = false; // Stop real-time detection loop
     _progressAnimationController.dispose();
     _cameraController?.dispose();
-    _detectionTimer?.cancel();
     _gazeController.dispose();
+    _gazeService.dispose();
     super.dispose();
   }
 
@@ -180,22 +182,18 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
     print('🔄 Gaze calibration + Antispoofing');
     print('🔄 ========================================');
 
-    // Start gaze detection timer (every 300ms)
-    _detectionTimer = Timer.periodic(
-      const Duration(milliseconds: 300),
-      (timer) => _detectGaze(),
-    );
+    // Start real-time continuous gaze detection (no timer delay)
+    _detectGazeContinuously();
 
     // Antispoofing frames will be captured from gaze detection frames
-    // (frame 2 at ~600ms and frame 4 at ~1200ms)
+    // (frame 2 and frame 4)
   }
 
   void _stopVerification() {
-    _detectionTimer?.cancel();
     _progressAnimationController.reset();
 
     setState(() {
-      _isVerifying = false;
+      _isVerifying = false; // Breaks the continuous detection loop
       _isLookingAtTarget = false;
       _currentTargetIdx = 0;
       _statusMessage = "";
@@ -207,6 +205,19 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
   // ==========================================
   // GAZE DETECTION & CALIBRATION
   // ==========================================
+
+  /// Continuously detects gaze in real-time, frame after frame,
+  /// with zero delay between frames (limited only by processing speed).
+  Future<void> _detectGazeContinuously() async {
+    print('🔄 Real-time gaze detection started');
+    while (_isVerifying &&
+        !_gazeCalibrationPassed &&
+        _cameraController != null &&
+        _cameraController!.value.isInitialized) {
+      await _detectGaze();
+    }
+    print('🔄 Real-time gaze detection stopped');
+  }
 
   Future<void> _detectGaze() async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
@@ -238,11 +249,11 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
         }
       }
 
-      final result = await _gazeController.predictFromPath(image.path);
+      final result = await _gazeService.predictFromPath(image.path);
 
       if (result != null) {
         print(
-          '👁️ Gaze: ${result.direction} (P: ${result.pitchDegrees.toStringAsFixed(1)}°, Y: ${result.yawDegrees.toStringAsFixed(1)}°)',
+          '👁️ Gaze: ${result.direction} (P: ${result.yawDegrees.toStringAsFixed(1)}°, Y: ${result.pitchDegrees.toStringAsFixed(1)}°)',
         );
         setState(() => _currentGaze = result);
 
@@ -289,8 +300,7 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
     if (_currentTargetIdx >= _calibrationSequence.length) {
       // Gaze calibration complete!
       print('\n🎉 GAZE CALIBRATION COMPLETE!');
-      _gazeCalibrationPassed = true;
-      _detectionTimer?.cancel();
+      _gazeCalibrationPassed = true; // Stops the real-time detection loop
 
       setState(() {
         _statusMessage = "✅ Gaze verified! Checking liveness...";
@@ -394,7 +404,6 @@ class _HybridVerificationScreenState extends State<HybridVerificationScreen>
     }
 
     // Both complete - determine final result
-    _detectionTimer?.cancel();
     final isLive = _finalAntispoofResult?.isLive ?? false;
     final passed = _gazeCalibrationPassed && isLive;
 
@@ -852,7 +861,7 @@ class _HybridCalibrationPainter extends CustomPainter {
 
     final centerX = size.width / 2;
     final centerY = size.height / 2;
-    final offset = 140.0;
+    final offset = 220.0;
 
     Color color;
     Offset targetPos;

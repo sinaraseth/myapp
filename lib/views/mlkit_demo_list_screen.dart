@@ -6,6 +6,9 @@ import 'mlkit_demos/face_mesh_demo.dart';
 import 'mlkit_demos/barcode_scanning_demo.dart';
 import 'mlkit_demos/image_labeling_demo.dart';
 import 'mlkit_demos/gaze_detection_demo.dart';
+import 'mlkit_demos/gaze_detection_api_demo.dart';
+import 'mlkit_demos/gaze_detection_touch.dart';
+import 'mlkit_demos/gaze_detection_v1.dart';
 // import 'mlkit_demos/object_detection_demo.dart';
 
 class MLKitDemoListScreen extends StatelessWidget {
@@ -34,6 +37,27 @@ class MLKitDemoListScreen extends StatelessWidget {
         'icon': Icons.remove_red_eye,
         'color': Colors.indigo,
         'screen': const GazeDetectionDemo(),
+      },
+      {
+        'title': 'Gaze Detection (API)',
+        'description': 'Gaze detection via Flask API server',
+        'icon': Icons.cloud,
+        'color': Colors.teal,
+        'screen': const GazeDetectionApiDemo(),
+      },
+      {
+        'title': 'Gaze Detection (Touch)',
+        'description': 'Tap 5 dots to prove you are looking at the right spot',
+        'icon': Icons.touch_app,
+        'color': Colors.cyan,
+        'screen': const GazeDetectionTouch(),
+      },
+      {
+        'title': 'Gaze Detection V1 (MobileNetV2)',
+        'description': 'Tap 5 dots — gaze via MobileNetV2 model',
+        'icon': Icons.visibility,
+        'color': Colors.orange,
+        'screen': const GazeDetectionV1(),
       },
       {
         'title': 'Text Recognition',

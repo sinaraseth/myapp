@@ -45,4 +45,5 @@ flutter:
   assets:
     - assets/antispoofing.onnx
     - assets/l2cs_gaze360.onnx
+    - assets/mobilenetv2_gaze.onnx
     - .env
